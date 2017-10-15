@@ -1,0 +1,12 @@
+server:
+  port: ${vcap.application.port:8081}
+eureka:
+  instance:
+    appname: ${vcap.application.name:eurekaserver}
+    hostname: ${vcap.application.uris[0]:localhost}
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+  server:
+      waitTimeInMsWhenSyncEmpty: 0
+      enableSelfPreservation: true

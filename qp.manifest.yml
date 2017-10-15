@@ -1,0 +1,8 @@
+---
+inherit: manifest_base.yml
+applications:
+- name: uhd-eureka-qp
+  host: uhd-eureka-qp
+  instances: 1
+  env:
+    SPRING_PROFILES_ACTIVE: qp,cloud

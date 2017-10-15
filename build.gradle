@@ -1,0 +1,105 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.4.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		//classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4+"
+		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.5.2'
+	}
+}
+
+
+plugins {
+	id "org.sonarqube" version "2.0.1"
+}
+
+allprojects {
+	apply plugin: "com.jfrog.artifactory"
+}
+
+def versionPropsFile = file('gradle.properties')
+Properties versionProps = new Properties()
+versionProps.load(new FileInputStream(versionPropsFile))
+def groupProp = versionProps['groupId'];
+def artifactName = versionProps['artifactName'];
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'distribution'
+apply plugin: 'maven-publish'
+//apply plugin: "jacoco"
+apply plugin: 'org.sonarqube'
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+ext {
+	springCloudVersion = 'Dalston.SR1'
+}
+
+dependencies {
+	compile('org.springframework.cloud:spring-cloud-starter-eureka-server')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+
+	}
+}
+
+publishing {
+	publications {
+		api(MavenPublication) {
+			groupId groupProp
+			artifactId artifactName
+			artifact ('build/libs/'+artifactName+"-"+".jar") {
+				extension  = 'jar'
+			}
+		}
+	}
+}
+
+publishing {
+	repositories {
+		maven {
+			url 'https://maven.artifactory.homedepot.com/artifactory/libs-release-local'
+		}
+	}
+}
+
+
+
+
+/*
+task incrementVersion {
+	doLast {
+		versionBuild = versionProps['versionBuild'].toInteger() + 1
+		versionProps['versionBuild'] = versionBuild.toString()
+		versionProps.store(versionPropsFile.newWriter(), null)
+		println 'Version Incremented Successfully'
+	}
+}
+*/
+
+sonarqube {
+	properties {
+		property "sonar.projectName", artifactName
+		property "sonar.projectKey", groupProp+":"+artifactName
+		property "sonar.buildbreaker.skip" , "false"
+		property "sonar.scm.disabled", "true"
+		property "sonar.exclusions", "**/*Config.java,**/cloudutil/*.java,**/exception/*.java,**/to/SheetErrorTO.java,**/to/ScheduleZipListTO.java,**/to/SheetResponseTO.java,**/to/SheetResponseTO.java"
+	}
+}
